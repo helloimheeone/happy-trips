@@ -4036,6 +4036,9 @@ document.getElementById('migrateOverwrite').addEventListener('click', () => {
 document.getElementById('migratePasteOverwrite').addEventListener('click', () => {
   document.getElementById('migratePasteOverwrite').classList.toggle('on');
 });
+document.getElementById('migratePresetOverwrite').addEventListener('click', () => {
+  document.getElementById('migratePresetOverwrite').classList.toggle('on');
+});
 migrateModal.querySelectorAll('.sub-nav-item').forEach(btn => {
   btn.addEventListener('click', () => setActiveMigrateSub(btn.dataset.msub));
 });
