@@ -564,6 +564,36 @@ body {
 }
 
 /* ====== Map Tab ====== */
+.day-filter-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 12px;
+  padding-bottom: 2px;
+}
+.day-filter-bar::-webkit-scrollbar { display: none; }
+.day-chip {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+}
+.day-chip:hover { border-color: var(--text); color: var(--text); }
+.day-chip.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
 .weather-toggle {
   display: inline-flex;
   background: var(--rest-bg);
@@ -2361,6 +2391,7 @@ a.dir-item-arrow:hover { color: var(--text); }
         </div>
 
         <div class="sub-content active" data-sub="view">
+          <div class="day-filter-bar" id="dayFilterBar" style="display:none"></div>
           <div id="weatherWrap" style="display:none">
             <div class="weather-toggle">
               <button type="button" class="wx-tab active" data-wx="week">주간</button>
@@ -2533,6 +2564,10 @@ a.dir-item-arrow:hover { color: var(--text); }
       <div class="modal-hint" style="margin-top:4px">"장소" 탭에 등록한 곳을 고르면 정보가 자동 입력돼요.</div>
     </div>
     <div class="modal-field">
+      <label class="modal-label" for="ev_day">날짜</label>
+      <select class="modal-input" id="ev_day"></select>
+    </div>
+    <div class="modal-field">
       <label class="modal-label" for="ev_time">시간</label>
       <input class="modal-input" type="text" id="ev_time" placeholder="예: 09:00 또는 PM">
     </div>
@@ -2625,7 +2660,7 @@ a.dir-item-arrow:hover { color: var(--text); }
     </div>
 
     <div class="modal-section" id="ts_migrateSection" style="display:none">
-      <div class="modal-label">방콕 추천 코스</div>
+      <div class="modal-label">방콕 V2 (교통 반영)</div>
       <div id="ts_migrateArea"></div>
     </div>
     <div class="modal-buttons">
@@ -3678,7 +3713,7 @@ async function removeMemberFromTrip(uid) {
 
 // ===== Bangkok App Migration =====
 // Claude가 짠 방콕 추천 코스 (앱 내장)
-const BANGKOK_PRESET = {"plan":[{"id":"d1","date":"2026-06-12","theme":"arrival, gently","events":[{"id":"d1e1","time":"PM","name":"호텔 체크인 + 풀","note":"도착 후 적응. 책 한 권 들고 풀사이드.","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d1e2","time":"19:00","name":"사톤 근처 가벼운 저녁","note":"","url":"","cat":"food","lat":null,"lng":null},{"id":"d1e3","time":"21:00","name":"마사지 → 일찍 잠","note":"비행 피로 풀기","url":"","cat":"massage","lat":null,"lng":null}]},{"id":"d2","date":"2026-06-13","theme":"송웟, 탈랏노이, 그리고 올드타운의 밤","events":[{"id":"d2e1","time":"07:00","name":"호텔 출발 · 그랩","note":"러시아워 피해서 일찍.","url":"","cat":"transport","lat":null,"lng":null},{"id":"d2e2","time":"09:00","name":"SCR — Song Wat Coffee Roasters","note":"더티라떼 시그니처. 빈티지 콘크리트 감성.","url":"https://www.google.com/maps/place/?q=place_id:ChIJoyc8PkeZ4jARw5Sv4vbnFhE","cat":"cafe","lat":13.7391467,"lng":100.5066564},{"id":"d2e3","time":"10:30","name":"Mother Roaster — Talat Noi","note":"2층 옛 태국집. 할머니가 직접 내려주는 커피. 골목 그래피티 산책.","url":"https://www.google.com/maps/place/?q=place_id:ChIJ1bQYQayZ4jARpphLAIGHblQ","cat":"cafe","lat":13.7329909,"lng":100.5123218},{"id":"d2e4","time":"16:30","name":"마사지","note":"","url":"","cat":"massage","lat":null,"lng":null},{"id":"d2e5","time":"19:00","name":"저녁 — 호텔 또는 사톤","note":"","url":"","cat":"food","lat":null,"lng":null},{"id":"d2e6","time":"20:00","name":"Leelabar","note":"올드타운 4층 루프탑. 히든 젬.","url":"https://www.google.com/maps/place/?q=place_id:ChIJlb8hgcCZ4jARuePQi0g9oN4","cat":"bar","lat":13.7490416,"lng":100.5045911},{"id":"d2e7","time":"21:30","name":"The One Khaosan — 분위기만","note":"도보 10분. 가격 바꿔치기 후기 있으니 주의.","url":"https://www.google.com/maps/place/?q=place_id:ChIJqUczUW2Z4jARDp-Hi36LAFk","cat":"bar","lat":13.7592095,"lng":100.4968991}]},{"id":"d3","date":"2026-06-14","theme":"호텔 중심의, 가장 게으른 하루","events":[{"id":"d3e1","time":"08:00","name":"tarns coffee","note":"호텔 도보 10분. 일본풍 미니멀. 책 읽기 좋음.","url":"https://www.google.com/maps/place/?q=place_id:ChIJub6OZACf4jARcRjVx75grFs","cat":"cafe","lat":13.7220819,"lng":100.5370481},{"id":"d3e2","time":"09:30","name":"룸피니 파크 산책","note":"호텔 바로 옆. 아침 공기.","url":"","cat":"activity","lat":null,"lng":null},{"id":"d3e3","time":"17:00","name":"마사지","note":"","url":"","cat":"massage","lat":null,"lng":null},{"id":"d3e4","time":"19:00","name":"사톤 근처 저녁","note":"","url":"","cat":"food","lat":null,"lng":null},{"id":"d3e5","time":"20:30","name":"Maggie Choo's 🎷","note":"그랩 5~10분. 1930년대 상하이 비밀 클럽 컨셉. 라이브 재즈. 토요일은 예약 권장.","url":"https://www.google.com/maps/place/?q=place_id:ChIJ68V6JtOY4jAREx42-cvq9R0","cat":"bar","lat":13.7230861,"lng":100.5184222}]},{"id":"d4","date":"2026-06-15","theme":"수쿰빗으로, 한 번","events":[{"id":"d4e1","time":"09:00","name":"Rung Rueang Pork Noodles","note":"BTS Phrom Phong. 미슐랭 빕구르망 폭누들. 100밧 가성비.","url":"https://www.google.com/maps/place/?q=place_id:ChIJMwKZPwGf4jARkgykQtmIoM8","cat":"food","lat":13.7284371,"lng":100.5706724},{"id":"d4e2","time":"10:30","name":"근처 카페 한 군데","note":"Phrom Phong 일대.","url":"","cat":"cafe","lat":null,"lng":null},{"id":"d4e3","time":"16:00","name":"마사지","note":"","url":"","cat":"massage","lat":null,"lng":null},{"id":"d4e4","time":"17:30","name":"Sanctuary Bangkok","note":"BTS Ekkamai. InterContinental 34층 루프탑. 노을 시간 맞춰서.","url":"https://www.google.com/maps/place/?q=place_id:ChIJ7UCSGJmf4jARfePMK8tF_2A","cat":"bar","lat":13.7224183,"lng":100.5814021},{"id":"d4e5","time":"19:30","name":"SW1 Market","note":"BTS Asok. 야시장, 라이브 음악 캐주얼 저녁.","url":"https://www.google.com/maps/place/?q=place_id:ChIJMSSVbwCf4jARMQeZPaFCjGo","cat":"market","lat":13.7380449,"lng":100.5584149}]},{"id":"d5","date":"2026-06-16","theme":"마무리, 천천히","events":[{"id":"d5e1","time":"07:00","name":"Dusit Central Park 옥상 가든","note":"호텔 도보. 6AM 오픈. 사람 없을 때 룸피니 뷰.","url":"https://www.google.com/maps/place/?q=place_id:ChIJe0H3CRSf4jAR_zOGf06ufiw","cat":"market","lat":13.7287601,"lng":100.5375563},{"id":"d5e2","time":"09:00","name":"호텔 조식 · 짐 정리","note":"","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d5e3","time":"12:00","name":"체크아웃 → 공항","note":"수완나품 차 30분.","url":"","cat":"transport","lat":null,"lng":null}]}],"places":[{"id":"sukhothai","name":"The Sukhothai Bangkok","cat":"hotel","lat":13.7229783,"lng":100.540869,"note":"🏨 우리 호텔. BTS Chong Nonsi 도보권","url":"https://www.google.com/maps/place/?q=place_id:ChIJPfeHijq44jARW7bwbPBz3v4"},{"id":"healthland","name":"Health Land Sathon","cat":"massage","lat":13.7213709,"lng":100.5262333,"note":"2시간 800밧대. 호텔 도보.","url":"https://www.google.com/maps/place/?q=place_id:ChIJTyjRrs2Y4jARAx3zbZs6rOM"},{"id":"asiaherb","name":"Asia Herb Association","cat":"massage","lat":13.7260032,"lng":100.5676092,"note":"프롬퐁. Day 4 가는 길에 들르기 좋음.","url":"https://www.google.com/maps/place/?q=place_id:ChIJOwsnQASf4jAR_no5JyVXV1s"}],"checklist":[{"id":"c1","text":"여권 (만료일 6개월 이상 확인)","checked":false},{"id":"c2","text":"항공권 / 호텔 예약 확인서","checked":false},{"id":"c3","text":"여행자 보험","checked":false},{"id":"c4","text":"태국 입국 카드 (도착 전 작성)","checked":false},{"id":"c5","text":"바트 환전 또는 트래블카드","checked":false},{"id":"c6","text":"멀티 어댑터 (태국 220V)","checked":false},{"id":"c7","text":"자외선 차단제 + 모자","checked":false},{"id":"c8","text":"우산 / 우비 (6월 우기)","checked":false},{"id":"c9","text":"상비약 (지사제, 두통약, 모기약)","checked":false},{"id":"c10","text":"읽을 책","checked":false},{"id":"c11","text":"수영복","checked":false},{"id":"c12","text":"보조배터리","checked":false}],"tips":[{"id":"t1","label":"on heat —","body":"12 ~ 16시는 가장 더운 시간. 무조건 호텔. 외출은 7~10시, 17시 이후."},{"id":"t2","label":"on rain —","body":"6월은 우기. 스콜은 보통 1시간 안에 끝남. 작은 우산이면 충분."},{"id":"t3","label":"on transport —","body":"러시아워는 평일 7~9시, 16~19시. 이 시간엔 BTS · MRT가 그랩보다 빠름."},{"id":"t4","label":"on tipping —","body":"마사지는 50~100밧 정도. 식당은 봉사료 포함이라 별도 팁 안 줘도 OK."},{"id":"t5","label":"on dress code —","body":"사원 가는 일정은 없지만, 혹시 들르면 어깨 · 무릎 가리기. 루프탑 바는 캐주얼 OK."}],"settings":{"people":2,"currencyCode":"THB","exchangeRate":40}};
+const BANGKOK_PRESET = {"plan":[{"id":"d1","date":"2026-06-12","theme":"arrival, gently","events":[{"id":"d1e1","time":"14:10","name":"수완나품 공항 도착","note":"입국 수속 여유롭게. 금요일 오후라 호텔까지 시간 더 잡기.","url":"","cat":"transport","lat":null,"lng":null},{"id":"d1e2","time":"16:00","name":"호텔 체크인 + 풀사이드","note":"도착 후 적응. 책 한 권 들고 풀사이드.","url":"https://www.google.com/maps/place/?q=place_id:ChIJPfeHijq44jARW7bwbPBz3v4","cat":"hotel","lat":13.7229783,"lng":100.540869},{"id":"d1e3","time":"17:30","name":"룸피니 공원 산책 (선택)","note":"호텔에서 가까움. 컨디션 좋으면 가볍게.","url":"https://www.google.com/maps/search/?api=1&query=Lumphini%20Park%20Bangkok","cat":"activity","lat":13.7305,"lng":100.5419},{"id":"d1e4","time":"19:30","name":"Moo Moo Eatery 저녁","note":"호텔 근처. 첫날은 가깝게.","url":"https://www.google.com/maps/search/?api=1&query=Moo%20Moo%20Eatery%20Sathorn%20Bangkok","cat":"food","lat":null,"lng":null},{"id":"d1e5","time":"21:00","name":"마사지 — Let's Relax Suan Phlu","note":"비행 피로 풀기. 호텔 도보권.","url":"https://www.google.com/maps/search/?api=1&query=Let%27s%20Relax%20Suan%20Phlu%20Bangkok","cat":"massage","lat":null,"lng":null}]},{"id":"d2","date":"2026-06-13","theme":"짜뚜짝, 그리고 밤문화","events":[{"id":"d2e1","time":"09:30","name":"호텔 출발 · 그랩","note":"퇴근 정체 피해서 일찍.","url":"","cat":"transport","lat":null,"lng":null},{"id":"d2e2","time":"10:15","name":"짜뚜짝 주말시장","note":"3시간 제한. 더 있으면 지침. 더위·인파 조심.","url":"https://www.google.com/maps/search/?api=1&query=Chatuchak%20Weekend%20Market%20Bangkok","cat":"market","lat":13.7997,"lng":100.5511},{"id":"d2e3","time":"13:00","name":"근처 점심","note":"시장 안 또는 근처 식당.","url":"","cat":"food","lat":null,"lng":null},{"id":"d2e4","time":"14:00","name":"호텔 복귀","note":"16시 넘기면 정체 시작.","url":"","cat":"transport","lat":null,"lng":null},{"id":"d2e5","time":"15:00","name":"호텔 휴식 / 수영","note":"토요일 밤 위해 충전. 필수.","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d2e6","time":"20:00","name":"Foojohn Jazz Club","note":"송왓/차이나타운 쪽. 라이브 재즈.","url":"https://www.google.com/maps/search/?api=1&query=Foojohn%20Jazz%20Club%20Bangkok","cat":"bar","lat":null,"lng":null},{"id":"d2e7","time":"22:00","name":"Sanctuary Bangkok (또는 Leelabar)","note":"마무리 칵테일 한 잔. 루프탑 노을 빠르면 일찍.","url":"https://www.google.com/maps/place/?q=place_id:ChIJ7UCSGJmf4jARfePMK8tF_2A","cat":"bar","lat":13.7224183,"lng":100.5814021}]},{"id":"d3","date":"2026-06-14","theme":"송왓, 그리고 차이나타운","events":[{"id":"d3e1","time":"10:00","name":"호텔 조식 + 수영","note":"늦잠 OK. 천천히.","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d3e2","time":"12:30","name":"호텔 출발 → 송왓","note":"오후 출발해야 더위 피함.","url":"","cat":"transport","lat":null,"lng":null},{"id":"d3e3","time":"13:00","name":"SCR — Song Wat Coffee Roasters","note":"더티라떼 시그니처. 빈티지 콘크리트 감성.","url":"https://www.google.com/maps/place/?q=place_id:ChIJoyc8PkeZ4jARw5Sv4vbnFhE","cat":"cafe","lat":13.7391467,"lng":100.5066564},{"id":"d3e4","time":"14:00","name":"Mother Roaster — Talat Noi","note":"2층 옛 태국집. 할머니 손커피. 골목 그래피티 산책.","url":"https://www.google.com/maps/place/?q=place_id:ChIJ1bQYQayZ4jARpphLAIGHblQ","cat":"cafe","lat":13.7329909,"lng":100.5123218},{"id":"d3e5","time":"15:30","name":"송왓 소품샵 둘러보기","note":"Oyster and Things, Copen Songwat, Vanich House, I wanna Bangkok, Sell The Souls, Blulagoon, Road Of Cinnamon 등.","url":"https://www.google.com/maps/search/?api=1&query=Song%20Wat%20Road%20Bangkok%20Bangkok","cat":"market","lat":13.7385,"lng":100.5095},{"id":"d3e6","time":"17:30","name":"tarns coffee 또는 근처 카페","note":"저녁 정체 시간 동안 카페에서 대기.","url":"https://www.google.com/maps/place/?q=place_id:ChIJub6OZACf4jARcRjVx75grFs","cat":"cafe","lat":13.7220819,"lng":100.5370481},{"id":"d3e7","time":"19:00","name":"저녁 — NAAM 1608","note":"송왓 동네 분위기 좋은 식당 (또는 가성비 룽르엉, 세련된 The Sixth 6th).","url":"https://www.google.com/maps/search/?api=1&query=NAAM%201608%20Bangkok","cat":"food","lat":null,"lng":null},{"id":"d3e8","time":"20:30","name":"호텔 복귀","note":"저녁 정체 풀리는 시간.","url":"","cat":"transport","lat":null,"lng":null}]},{"id":"d4","date":"2026-06-15","theme":"수코타이 권역, 가장 게으른 하루","events":[{"id":"d4e1","time":"10:00","name":"호텔 수영장","note":"월요일 평일 아침. 여유롭게.","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d4e2","time":"12:00","name":"빠톰 오가닉 리빙","note":"호텔 근처. 유기농 점심·카페.","url":"https://www.google.com/maps/search/?api=1&query=Patom%20Organic%20Living%20Bangkok","cat":"cafe","lat":null,"lng":null},{"id":"d4e3","time":"14:00","name":"One Bangkok / Central Park","note":"실내몰. 더위·정체 피하기 좋음. Sarapad Thai 추천.","url":"https://www.google.com/maps/search/?api=1&query=One%20Bangkok%20Bangkok","cat":"market","lat":13.727,"lng":100.5469},{"id":"d4e4","time":"17:30","name":"몰/카페 안 머물기","note":"정체 시간 동안 안에서.","url":"","cat":"market","lat":null,"lng":null},{"id":"d4e5","time":"19:30","name":"저녁 — Sarapad Thai (One Bangkok)","note":"몰 안 식당. 이동 없이 해결.","url":"https://www.google.com/maps/search/?api=1&query=Sarapad%20Thai%20One%20Bangkok%20Bangkok","cat":"food","lat":13.727,"lng":100.5469},{"id":"d4e6","time":"20:30","name":"룸피니 야경 산책 또는 마사지","note":"호텔 근처. 가볍게 마무리.","url":"https://www.google.com/maps/search/?api=1&query=Lumphini%20Park%20Bangkok","cat":"activity","lat":13.7305,"lng":100.5419}]},{"id":"d5","date":"2026-06-16","theme":"마무리, 천천히","events":[{"id":"d5e1","time":"10:00","name":"호텔 조식 + 짐 정리","note":"여유롭게.","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d5e2","time":"12:00","name":"체크아웃 + 짐 맡기기","note":"호텔에 짐 보관.","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d5e3","time":"12:30","name":"One Bangkok / Central Park 마무리","note":"밥·카페·쇼핑·에어컨 다 해결. Dusit Central Park 옥상도 OK.","url":"https://www.google.com/maps/place/?q=place_id:ChIJe0H3CRSf4jAR_zOGf06ufiw","cat":"market","lat":13.7287601,"lng":100.5375563},{"id":"d5e4","time":"16:00","name":"마사지 90분 — Health Land","note":"마지막 마사지. 샤워 가능 여부 확인하면 더 좋음.","url":"https://www.google.com/maps/place/?q=place_id:ChIJTyjRrs2Y4jARAx3zbZs6rOM","cat":"massage","lat":13.7213709,"lng":100.5262333},{"id":"d5e5","time":"18:00","name":"호텔 복귀 + 짐 찾기","note":"출발 준비.","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d5e6","time":"19:00","name":"공항 출발","note":"비행기 시간 4시간 전 호텔 나오기. 정체 대비.","url":"","cat":"transport","lat":null,"lng":null}]}],"places":[{"id":"sukhothai","name":"The Sukhothai Bangkok","cat":"hotel","lat":13.7229783,"lng":100.540869,"note":"🏨 우리 호텔. BTS Chong Nonsi 도보권","url":"https://www.google.com/maps/place/?q=place_id:ChIJPfeHijq44jARW7bwbPBz3v4"},{"id":"lumphini","name":"룸피니 공원","cat":"activity","lat":13.7305,"lng":100.5419,"note":"호텔 도보. 아침/저녁 산책.","url":"https://www.google.com/maps/search/?api=1&query=Lumphini%20Park%20Bangkok"},{"id":"onebangkok","name":"One Bangkok","cat":"market","lat":13.727,"lng":100.5469,"note":"실내몰. 더위·우기 피난처.","url":"https://www.google.com/maps/search/?api=1&query=One%20Bangkok%20Bangkok"},{"id":"chatuchak","name":"짜뚜짝 주말시장","cat":"market","lat":13.7997,"lng":100.5511,"note":"토일만. 오전 추천.","url":"https://www.google.com/maps/search/?api=1&query=Chatuchak%20Weekend%20Market%20Bangkok"},{"id":"healthland","name":"Health Land Sathon","cat":"massage","lat":13.7213709,"lng":100.5262333,"note":"2시간 800밧대. 호텔 도보.","url":"https://www.google.com/maps/place/?q=place_id:ChIJTyjRrs2Y4jARAx3zbZs6rOM"},{"id":"asiaherb","name":"Asia Herb Association","cat":"massage","lat":13.7260032,"lng":100.5676092,"note":"프롬퐁. 약초 마사지.","url":"https://www.google.com/maps/place/?q=place_id:ChIJOwsnQASf4jAR_no5JyVXV1s"},{"id":"letsrelax","name":"Let's Relax Suan Phlu","cat":"massage","lat":null,"lng":null,"note":"호텔 근처 옵션.","url":"https://www.google.com/maps/search/?api=1&query=Let%27s%20Relax%20Suan%20Phlu%20Bangkok"},{"id":"retreatvit","name":"Retreat on Vitayu","cat":"massage","lat":null,"lng":null,"note":"마사지 옵션.","url":"https://www.google.com/maps/search/?api=1&query=Retreat%20on%20Vitayu%20Bangkok"}],"checklist":[{"id":"c1","text":"여권 (만료일 6개월 이상 확인)","note":"","checked":false},{"id":"c2","text":"항공권 / 호텔 예약 확인서","note":"","checked":false},{"id":"c3","text":"여행자 보험","note":"","checked":false},{"id":"c4","text":"태국 입국 카드 (도착 전 작성)","note":"","checked":false},{"id":"c5","text":"바트 환전 또는 트래블카드","note":"","checked":false},{"id":"c6","text":"멀티 어댑터 (태국 220V)","note":"","checked":false},{"id":"c7","text":"자외선 차단제 + 모자","note":"","checked":false},{"id":"c8","text":"우산 / 우비 (6월 우기)","note":"","checked":false},{"id":"c9","text":"상비약 (지사제, 두통약, 모기약)","note":"","checked":false},{"id":"c10","text":"읽을 책","note":"","checked":false},{"id":"c11","text":"수영복","note":"","checked":false},{"id":"c12","text":"보조배터리","note":"","checked":false}],"tips":[{"id":"t1","label":"on heat —","body":"12~16시는 가장 더운 시간. 무조건 실내. 외출은 7~10시, 17시 이후."},{"id":"t2","label":"on rain —","body":"6월은 우기. 스콜은 보통 1시간 안에 끝남. 작은 우산 필수."},{"id":"t3","label":"on transport —","body":"택시 정체: 평일 7~9시, 16:30~19:30. 비 오면 +30~45분. 하루 한 권역 원칙."},{"id":"t4","label":"on tipping —","body":"마사지 50~100밧. 식당은 봉사료 포함이라 별도 팁 안 줘도 OK."},{"id":"t5","label":"on dress code —","body":"사원 가는 일정 없지만 들르면 어깨·무릎 가리기. 루프탑 바는 캐주얼 OK."},{"id":"t6","label":"on airport —","body":"수완나품 공항 이동: 평소 45~90분, 정체 시 +30분. 비행기 시간 4시간 전 호텔 출발 권장."}],"settings":{"people":2,"currencyCode":"THB","exchangeRate":40}};
 
 // 방콕 앱의 localStorage 키들
 const BK_KEYS = {
@@ -3725,7 +3760,18 @@ function bangkokDataSummary(bk) {
 
 function renderMigrateArea() {
   const sec = document.getElementById('ts_migrateSection');
-  if (sec) sec.style.display = 'none'; // 가져오기 완료 후 숨김
+  const area = document.getElementById('ts_migrateArea');
+  if (!sec || !area) return;
+  sec.style.display = '';
+  area.innerHTML = `
+    <div class="modal-hint" style="margin-bottom:8px">
+      Claude가 짠 방콕 4박5일 추천 코스를 가져올 수 있어요. (택시 정체 고려 ver.)
+    </div>
+    <button type="button" class="migrate-cta" id="migrateOpenBtn">
+      ✨ 방콕 V2 일정 가져오기 (교통 반영)
+    </button>
+  `;
+  document.getElementById('migrateOpenBtn').addEventListener('click', openMigrateModal);
 }
 
 // === Migrate Modal ===
@@ -5407,6 +5453,7 @@ let leafletMap = null;
 let mapMarkersLayer = null;
 let userLocMarker = null;
 let lastMarkerCount = 0;
+let lastFitKey = '';
 
 function initMap() {
   if (leafletMap) return;
@@ -5439,20 +5486,22 @@ function initMap() {
   setupHotelButton();
 }
 
+let dayFilter = 'all'; // Map 일자 필터 ('all' | '0' | '1' | ...)
+
 function getAllMapPlaces() {
   if (!currentTrip || !currentTrip.data) return [];
   const result = [];
   const seen = new Set();
-  // places 먼저
+  // places 먼저 (특정 day에 속하지 않음 → dayIdx: null)
   (currentTrip.data.places || []).forEach(p => {
     if (p.lat == null || p.lng == null) return;
     const k = `${p.lat},${p.lng}`;
     if (seen.has(k)) return;
     seen.add(k);
-    result.push({ ...p, source: 'place' });
+    result.push({ ...p, source: 'place', dayIdx: null });
   });
   // plan 이벤트 (좌표 있는 것)
-  (currentTrip.data.plan || []).forEach(day => {
+  (currentTrip.data.plan || []).forEach((day, dIdx) => {
     (day.events || []).forEach(ev => {
       if (ev.lat == null || ev.lng == null) return;
       const k = `${ev.lat},${ev.lng}`;
@@ -5461,7 +5510,7 @@ function getAllMapPlaces() {
       result.push({
         id: ev.id, name: ev.name, cat: ev.cat || 'activity',
         lat: ev.lat, lng: ev.lng, note: ev.note, url: ev.url,
-        source: 'event',
+        source: 'event', dayIdx: dIdx,
       });
     });
   });
@@ -5472,9 +5521,29 @@ function renderMapMarkers() {
   if (!leafletMap || !mapMarkersLayer) return;
   mapMarkersLayer.clearLayers();
 
-  const places = getAllMapPlaces();
+  const allPlaces = getAllMapPlaces();
+
+  // 일자 필터 칩 렌더 (Plan에 day가 2개 이상일 때만)
+  renderDayFilter();
+
+  // 필터 적용: 'all'이면 전체, 'place'면 places만 (day 없음), 숫자면 해당 day만
+  let places;
+  if (dayFilter === 'all') places = allPlaces;
+  else if (dayFilter === 'place') places = allPlaces.filter(p => p.dayIdx == null);
+  else {
+    const d = parseInt(dayFilter, 10);
+    places = allPlaces.filter(p => p.dayIdx === d);
+  }
+
   const mapEmpty = document.getElementById('mapEmpty');
-  if (mapEmpty) mapEmpty.style.display = places.length === 0 ? '' : 'none';
+  if (mapEmpty) {
+    mapEmpty.style.display = places.length === 0 ? '' : 'none';
+    if (places.length === 0 && allPlaces.length > 0) {
+      mapEmpty.innerHTML = '<p>이 필터에 해당하는 장소가 없어요.</p><p class="muted">필터를 "전체"로 바꿔보세요.</p>';
+    } else if (allPlaces.length === 0) {
+      mapEmpty.innerHTML = '<p>아직 좌표가 있는 장소가 없어요.</p><p class="muted">Plan 탭에서 이벤트에 구글맵 URL을 추가하면 핀이 표시돼요.</p>';
+    }
+  }
 
   const bounds = [];
   places.forEach(p => {
@@ -5489,7 +5558,7 @@ function renderMapMarkers() {
     const m = L.marker([p.lat, p.lng], { icon });
     m.bindPopup(`
       <div class="pop-name">${escapeHtml(p.name || '')}</div>
-      <div class="pop-cat">${cat.label}</div>
+      <div class="pop-cat">${cat.label}${p.dayIdx != null ? ' · Day ' + String(p.dayIdx + 1).padStart(2, '0') : ''}</div>
       ${p.note ? `<div class="pop-note">${escapeHtml(p.note)}</div>` : ''}
       <a class="pop-link" href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener">↗ 구글맵에서 열기</a>
     `);
@@ -5498,20 +5567,47 @@ function renderMapMarkers() {
   });
 
   // 호텔 버튼 표시 여부 (cat='hotel'인 장소가 있을 때만)
-  const hotel = places.find(p => p.cat === 'hotel');
+  const hotel = allPlaces.find(p => p.cat === 'hotel');
   const hotelBtn = document.getElementById('hotelBtn');
   if (hotelBtn) hotelBtn.style.display = hotel ? '' : 'none';
 
-  // 마커 수가 변했을 때만 fitBounds (사용자 줌 보존)
-  if (bounds.length && lastMarkerCount !== places.length) {
+  // 마커 수 또는 dayFilter 변경 시 fitBounds (사용자 줌 보존)
+  const fitKey = `${dayFilter}:${places.length}`;
+  if (bounds.length && lastFitKey !== fitKey) {
     leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-    lastMarkerCount = places.length;
+    lastFitKey = fitKey;
   } else if (bounds.length === 0) {
-    lastMarkerCount = 0;
+    lastFitKey = '';
   }
 
   // 날씨 로드 (대표 좌표 기준)
-  loadWeatherForTrip(places);
+  loadWeatherForTrip(allPlaces);
+}
+
+function renderDayFilter() {
+  const container = document.getElementById('dayFilterBar');
+  if (!container) return;
+  const plan = (currentTrip && currentTrip.data && currentTrip.data.plan) || [];
+  if (plan.length < 2) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = '';
+  const chips = ['all', ...plan.map((_, i) => String(i)), 'place'];
+  container.innerHTML = chips.map(k => {
+    let label;
+    if (k === 'all') label = '전체 일정';
+    else if (k === 'place') label = '기타 장소';
+    else label = `Day ${String(parseInt(k, 10) + 1).padStart(2, '0')}`;
+    const active = dayFilter === k ? 'active' : '';
+    return `<button type="button" class="day-chip ${active}" data-day="${k}">${label}</button>`;
+  }).join('');
+  container.querySelectorAll('.day-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      dayFilter = chip.dataset.day;
+      renderMapMarkers();
+    });
+  });
 }
 
 // ===== Weather (Open-Meteo) =====
@@ -5699,6 +5795,8 @@ function setupHotelButton() {
 // 다른 trip으로 전환 시 마커 카운트 리셋
 function resetMapState() {
   lastMarkerCount = 0;
+  lastFitKey = '';
+  dayFilter = 'all';
   weatherLoadedFor = null;
   weatherData = null;
   weatherMode = 'week';
@@ -5800,11 +5898,11 @@ function renderPlan(plan) {
 
   document.getElementById('addDayBtn').addEventListener('click', () => openDayModal(null));
 
-  // SortableJS for reordering events within a day
+  // SortableJS for reordering events within and across days
   if (typeof Sortable !== 'undefined') {
     c.querySelectorAll('.day-events').forEach(container => {
-      const dayIdx = parseInt(container.dataset.dayIdx, 10);
       Sortable.create(container, {
+        group: 'plan-events', // 모든 day 컨테이너 공유 → day 간 드래그 가능
         animation: 200,
         delay: 280,
         delayOnTouchOnly: true,
@@ -5818,14 +5916,24 @@ function renderPlan(plan) {
           document.querySelectorAll('.event.swipe-open').forEach(o => o.classList.remove('swipe-open'));
         },
         onEnd: async (evt) => {
-          if (evt.oldIndex === evt.newIndex) return;
+          const fromDayIdx = parseInt(evt.from.dataset.dayIdx, 10);
+          const toDayIdx = parseInt(evt.to.dataset.dayIdx, 10);
+          // 같은 day, 같은 위치면 무시
+          if (fromDayIdx === toDayIdx && evt.oldIndex === evt.newIndex) return;
           const plan = clonePlan();
-          const events = plan[dayIdx].events;
-          const [moved] = events.splice(evt.oldIndex, 1);
-          events.splice(evt.newIndex, 0, moved);
+          if (!plan[fromDayIdx] || !plan[toDayIdx]) return;
+          // from에서 빼서 to에 끼우기
+          const [moved] = plan[fromDayIdx].events.splice(evt.oldIndex, 1);
+          if (!plan[toDayIdx].events) plan[toDayIdx].events = [];
+          plan[toDayIdx].events.splice(evt.newIndex, 0, moved);
+          // 시간순 정렬은 의도적으로 적용 안 함 (드래그는 사용자 의도 존중)
+          try {
+            await savePlan(plan);
+          } catch (e) {
+            alert('이동 실패: ' + (e.code || '') + ' ' + e.message);
+          }
           suppressNextClick = true;
           setTimeout(() => suppressNextClick = false, 300);
-          await savePlan(plan);
         }
       });
     });
@@ -5946,13 +6054,15 @@ const eventModal = document.getElementById('eventModal');
 
 function openEventModal(dayIdx, eventId) {
   const plan = clonePlan();
-  // 장소 드롭다운 채우기
+  // 장소 드롭다운 + 날짜 드롭다운 채우기
   fillEventPlacePicker();
+  fillEventDayPicker(dayIdx);
   if (eventId) {
     const ev = (plan[dayIdx]?.events || []).find(e => e.id === eventId);
     if (!ev) return;
     eventModalCtx = { mode: 'edit', dayIdx, eventId, placeId: ev.placeId || null };
     document.getElementById('eventModalTitle').textContent = '이벤트 편집';
+    document.getElementById('ev_day').value = String(dayIdx);
     document.getElementById('ev_time').value = ev.time || '';
     document.getElementById('ev_name').value = ev.name || '';
     document.getElementById('ev_note').value = ev.note || '';
@@ -5963,6 +6073,7 @@ function openEventModal(dayIdx, eventId) {
   } else {
     eventModalCtx = { mode: 'add', dayIdx, eventId: null, placeId: null };
     document.getElementById('eventModalTitle').textContent = '새 이벤트';
+    document.getElementById('ev_day').value = String(dayIdx);
     document.getElementById('ev_time').value = '';
     document.getElementById('ev_name').value = '';
     document.getElementById('ev_note').value = '';
@@ -5976,43 +6087,102 @@ function openEventModal(dayIdx, eventId) {
   setTimeout(() => document.getElementById('ev_name').focus(), 80);
 }
 
+// 이벤트 모달의 '날짜' 드롭다운 채우기
+function fillEventDayPicker(currentDayIdx) {
+  const sel = document.getElementById('ev_day');
+  if (!sel) return;
+  const plan = (currentTrip && currentTrip.data && currentTrip.data.plan) || [];
+  if (plan.length === 0) {
+    sel.innerHTML = '<option value="0">Day 01</option>';
+    return;
+  }
+  sel.innerHTML = plan.map((day, idx) => {
+    const dateLabel = day.date ? formatDayDate(day.date) : '';
+    return `<option value="${idx}">Day ${String(idx + 1).padStart(2, '0')}${dateLabel ? ' · ' + escapeHtml(dateLabel) : ''}</option>`;
+  }).join('');
+}
+
 // 이벤트 모달의 '내 장소에서 가져오기' 드롭다운 채우기
+// places 배열 + plan에 추가된 장소(URL/좌표 있는 이벤트) 모두를 풀에 합쳐서 표시
 function fillEventPlacePicker() {
   const sel = document.getElementById('ev_pick');
   const field = document.getElementById('ev_pickField');
   if (!sel) return;
-  const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
 
-  // 이미 플랜에 연결된 장소 id 수집 (라벨 표시용)
-  const linkedIds = new Set();
-  if (currentTrip && currentTrip.data && currentTrip.data.plan) {
-    currentTrip.data.plan.forEach(day => {
-      (day.events || []).forEach(ev => { if (ev.placeId) linkedIds.add(ev.placeId); });
+  const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
+  const plan = (currentTrip && currentTrip.data && currentTrip.data.plan) || [];
+
+  // 중복 제거를 위한 키
+  const keyFor = (p) => {
+    if (p.placeId) return 'pid:' + p.placeId;
+    if (p.url) return 'url:' + p.url;
+    if (p.lat != null && p.lng != null) return 'geo:' + Number(p.lat).toFixed(4) + ',' + Number(p.lng).toFixed(4);
+    return 'name:' + ((p.name || '').toLowerCase().trim());
+  };
+
+  const seen = new Set();
+  const pool = []; // {kind:'place'|'event', id, name, cat, url, lat, lng, note, dayLabel}
+
+  // 1) places 배열
+  places.forEach(p => {
+    const k = keyFor(p);
+    if (seen.has(k)) return;
+    seen.add(k);
+    pool.push({ kind: 'place', id: p.id, name: p.name || '', cat: p.cat || '', url: p.url || '', lat: p.lat, lng: p.lng, note: p.note || '' });
+  });
+
+  // 2) plan 이벤트 중 URL/좌표가 있고 이름이 있는 것 (이미 placeId로 연결된 건 1)에서 처리됨)
+  plan.forEach((day, dIdx) => {
+    (day.events || []).forEach(ev => {
+      if (!ev.name) return;
+      if (!ev.url && (ev.lat == null || ev.lng == null)) return;
+      const k = keyFor(ev);
+      if (seen.has(k)) return;
+      seen.add(k);
+      pool.push({
+        kind: 'event',
+        id: null, // event는 placeId가 아니므로 선택해도 placeId 미지정
+        name: ev.name, cat: ev.cat || '', url: ev.url || '', lat: ev.lat, lng: ev.lng, note: ev.note || '',
+        dayLabel: 'Day ' + String(dIdx + 1).padStart(2, '0'),
+      });
     });
-  }
+  });
 
   if (field) field.style.display = ''; // 항상 보이게
 
-  if (places.length === 0) {
+  if (pool.length === 0) {
     sel.innerHTML = '<option value="">— 등록된 장소 없음 (장소 탭에서 추가) —</option>';
     return;
   }
+
+  // 옵션 값: kind:idx 형태로 직접 매핑
   sel.innerHTML = '<option value="">— 직접 입력 —</option>' +
-    places.map(p => {
+    pool.map((p, idx) => {
       const catLabel = p.cat && CATEGORIES[p.cat] ? `[${CATEGORIES[p.cat].label}] ` : '';
-      const linkedMark = linkedIds.has(p.id) ? ' · 이미 연결됨' : '';
-      return `<option value="${escapeAttr(p.id)}">${escapeHtml(catLabel + (p.name || '') + linkedMark)}</option>`;
+      const suffix = p.kind === 'event' ? ` · ${p.dayLabel}에 있음` : '';
+      return `<option value="pool:${idx}">${escapeHtml(catLabel + p.name + suffix)}</option>`;
     }).join('');
+
+  // pool을 select에 보관 (change 핸들러에서 참조)
+  sel._pool = pool;
 }
 
 // 드롭다운에서 장소 선택 시 필드 자동 채움
 document.getElementById('ev_pick').addEventListener('change', e => {
-  const placeId = e.target.value;
-  if (!placeId) { eventModalCtx.placeId = null; return; }
-  const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
-  const p = places.find(x => x.id === placeId);
+  const val = e.target.value;
+  if (!val || !val.startsWith('pool:')) {
+    eventModalCtx.placeId = null;
+    return;
+  }
+  const idx = parseInt(val.split(':')[1], 10);
+  const pool = e.target._pool || [];
+  const p = pool[idx];
   if (!p) return;
-  eventModalCtx.placeId = placeId;
+  // 'place' 종류면 placeId 연결, 'event' 종류면 placeId 미지정 (단순 정보만 복사)
+  eventModalCtx.placeId = p.kind === 'place' ? p.id : null;
+  // pool에서 가져온 좌표를 saveEventFromModal에서 쓰도록 임시 보관
+  eventModalCtx.pickedLat = p.lat != null ? p.lat : null;
+  eventModalCtx.pickedLng = p.lng != null ? p.lng : null;
   document.getElementById('ev_name').value = p.name || '';
   if (p.note) document.getElementById('ev_note').value = p.note;
   document.getElementById('ev_url').value = p.url || '';
@@ -6040,34 +6210,60 @@ async function saveEventFromModal() {
     lat, lng,
     placeId: eventModalCtx.placeId || null,
   };
+  // pool에서 선택한 좌표가 있으면 활용 (URL로 좌표 못 뽑았을 때)
+  if (data.lat == null && eventModalCtx.pickedLat != null) {
+    data.lat = eventModalCtx.pickedLat;
+    data.lng = eventModalCtx.pickedLng;
+  }
   // 연결된 장소가 있으면 그 장소의 좌표를 우선 사용 (URL로 좌표 못 뽑았을 때)
   if (data.placeId && data.lat == null) {
     const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
     const linked = places.find(x => x.id === data.placeId);
     if (linked && linked.lat != null) { data.lat = linked.lat; data.lng = linked.lng; }
   }
+
+  // 사용자가 선택한 새 day
+  const selectedDayIdx = parseInt(document.getElementById('ev_day').value, 10);
+  const origDayIdx = eventModalCtx.dayIdx;
+  const targetDayIdx = Number.isInteger(selectedDayIdx) ? selectedDayIdx : origDayIdx;
+
   const plan = clonePlan();
-  if (!plan[eventModalCtx.dayIdx]) return;
+  if (!plan[targetDayIdx]) return;
+
   if (eventModalCtx.mode === 'edit') {
-    const idx = plan[eventModalCtx.dayIdx].events.findIndex(e => e.id === eventModalCtx.eventId);
+    if (!plan[origDayIdx]) return;
+    const idx = plan[origDayIdx].events.findIndex(e => e.id === eventModalCtx.eventId);
     if (idx < 0) return;
-    const existing = plan[eventModalCtx.dayIdx].events[idx];
+    const existing = plan[origDayIdx].events[idx];
     if (data.lat == null && existing.url === data.url) {
       data.lat = existing.lat;
       data.lng = existing.lng;
     }
-    plan[eventModalCtx.dayIdx].events[idx] = { ...existing, ...data };
+    const updated = { ...existing, ...data };
+    if (targetDayIdx === origDayIdx) {
+      // 같은 day 내 편집
+      plan[origDayIdx].events[idx] = updated;
+    } else {
+      // 다른 day로 이동
+      plan[origDayIdx].events.splice(idx, 1);
+      if (!plan[targetDayIdx].events) plan[targetDayIdx].events = [];
+      plan[targetDayIdx].events.push(updated);
+    }
   } else {
-    if (!plan[eventModalCtx.dayIdx].events) plan[eventModalCtx.dayIdx].events = [];
-    plan[eventModalCtx.dayIdx].events.push({ id: 'e' + Date.now(), ...data });
+    if (!plan[targetDayIdx].events) plan[targetDayIdx].events = [];
+    plan[targetDayIdx].events.push({ id: 'e' + Date.now(), ...data });
   }
-  // 시간순 자동 정렬 (시간 있는 것끼리만; 시간 없는 건 제자리 유지)
-  sortEventsByTime(plan[eventModalCtx.dayIdx].events);
+  // 시간순 자동 정렬 (target day)
+  sortEventsByTime(plan[targetDayIdx].events);
+  // 원래 day가 다르면 거기도 정렬 (안전상)
+  if (targetDayIdx !== origDayIdx && plan[origDayIdx]) {
+    sortEventsByTime(plan[origDayIdx].events);
+  }
   try {
     await savePlan(plan);
     closeEventModal();
   } catch (e) {
-    alert('저장 실패: ' + e.message);
+    alert('저장 실패: ' + (e.code || '') + ' ' + e.message);
   }
 }
 

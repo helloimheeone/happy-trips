@@ -1,6 +1,6 @@
 // my trips — service worker
 // 앱 셸(HTML + CDN 라이브러리)만 캐싱. Firebase 통신은 항상 네트워크.
-const CACHE_VERSION = 'mytrips-v3';
+const CACHE_VERSION = 'mytrips-v6';
 const APP_SHELL = [
   './',
   './index.html',
