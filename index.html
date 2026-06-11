@@ -6044,11 +6044,16 @@ function getMapUrl(p) {
     const m = p.url.match(/place_id[:=]([\w-]+)/);
     if (m) placeId = m[1];
   }
+  // 1) place_id가 URL에서 추출되면 그걸로 정확한 핀 (이름 또는 좌표와 조합)
   if (placeId && name) return `https://www.google.com/maps/search/?api=1&query=${name}&query_place_id=${placeId}`;
   if (placeId && hasCoord) return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}&query_place_id=${placeId}`;
-  if (name) return `https://www.google.com/maps/search/?api=1&query=${name}`;
+  // 2) 사용자가 직접 입력한 URL이 있으면 그대로 사용 (가장 정확한 본인 의도)
+  if (p.url) return p.url;
+  // 3) 좌표가 있으면 좌표로
   if (hasCoord) return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
-  return p.url || '';
+  // 4) 이름만 있으면 이름 검색
+  if (name) return `https://www.google.com/maps/search/?api=1&query=${name}`;
+  return '';
 }
 
 // ===== Event Modal =====
